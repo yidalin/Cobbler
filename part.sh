@@ -1,35 +1,35 @@
 # Install cobbler in CentOS 7.3
 
 RedHatRelease=$(cat /etc/redhat-release)
-echo $RedHatRelease
+#echo $RedHatRelease
 
 Distro=$(echo $RedHatRelease | awk -F" " '{ print $1 }')
-echo $Distro
+#echo $Distro
 
 DistroVer=$(echo $RedHatRelease | awk -F" " '{ print $4 }' | awk -F"." '{ print $1}')
-echo $DistroVer
+#echo $DistroVer
 
 # Checking the distribution, it should be CentOS
 if [ "$Distro" == 'CentOS' ]; then
-    echo 'Good, the OS is CentOS!'
+    echo -e ">> Good, the OS is CentOS!\n"
 else
-    echo 'The OS is not CentOS, bye bye.'
+    echo -e ">> The OS is not CentOS, bye bye.\n"
     exit
 fi
 
 
 # Checking the distribution version, it should be 7
 if [ "$DistroVer" == '7' ]; then
-    echo 'Good, the distribution version is 7.'
+    echo -e ">> Good, the distribution version is 7.\n"
 else
-    echo 'The distribution version is not 7, bye bye.'
+    echo -e ">> The distribution version is not 7, bye bye.\n"
     exit
 fi
 
 if $(grep -q "SELINUX=enforcing" /etc/selinux/config); then
 	sed -in 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
 	#sudo reboot
-	echo 'SELinux is enabled, and now switch to disabled.'
+	echo -e ">> SELinux is enabled, and now switch to disabled.\n"
 else
-    echo 'SELinux is already disabled.'
+    echo -e ">> SELinux is already disabled.\n"
 fi
