@@ -28,8 +28,10 @@ fi
 
 if $(grep -q "SELINUX=enforcing" /etc/selinux/config); then
 	sed -in 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
-	#sudo reboot
-	echo -e ">> SELinux is enabled, and now switch to disabled.\n"
+	echo -e ">> SELinux is enabled, and now switch to disabled, the OS will reboot in 30 second.\n"
+	sleep 30
+	sudo reboot
+	
 else
     echo -e ">> SELinux is already disabled.\n"
 fi
