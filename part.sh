@@ -9,6 +9,13 @@ echo $Ditro
 DistroVer=$(echo $RedHatRelease | awk -F" " '{ print $4 }' | awk -F"." '{ print $1}')
 echo $DistroVer
 
+if [ $DistroVer == '6' ]; then
+    echo 'it is 7'
+else
+    echo 'it is not 7'
+    exit
+fi
+
 if $(grep -q "SELINUX=enforcing" /etc/selinux/config); then
 	sed -in 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
 	#sudo reboot
