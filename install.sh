@@ -15,32 +15,30 @@ TFTPServer=$(hostname -I)
 OldCobblerPassword=$(grep default_password_crypted /etc/cobbler/settings | awk '{ print$2 }')
 NewCobblerPassword=$(openssl passwd -1 -salt 'salt' 'cobbler')
 
-echo -e "\n"
-
 # Checking the distribution, it should be CentOS
 if [ "$Distro" == 'CentOS' ]; then
-    echo -e ">> Good, the OS is CentOS!\n"
+    echo -e "\n>> Good, the OS is CentOS!"
 else
-    echo -e ">> The OS is not CentOS, bye bye.\n"
+    echo -e "\n>> The OS is not CentOS, bye bye."
     exit
 fi
 
 # Checking the distribution version, it should be 7
 if [ "$DistroVer" == '7' ]; then
-    echo -e ">> Good, the distribution version is 7.\n"
+    echo -e "\n>> Good, the distribution version is 7."
 else
-    echo -e ">> The distribution version is not 7, bye bye.\n"
+    echo -e "\n>> The distribution version is not 7, bye bye."
     exit
 fi
 
 # Checking the SELinux setting
 if $(grep -q "SELINUX=enforcing" /etc/selinux/config); then
     sed -in 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
-    echo -e ">> SELinux is enabled, and now switch to disabled, the OS will reboot in 30 second.\n"
+    echo -e "\n>> SELinux is enabled, and now switch to disabled, the OS will reboot in 30 second."
     sleep 30
     sudo reboot
 else
-    echo -e ">> SELinux is already disabled.\n"
+    echo -e "\n>> SELinux is already disabled."
 fi
 
 # Checking the network can reach to internet
@@ -48,13 +46,13 @@ fi
 ping -c 2 8.8.8.8 > /dev/null
 
 if [ $? != '0' ]; then
-    echo -e ">> Please make sure your network is workable.\n"
+    echo -e "\n>> Please make sure your network is workable."
     exit
 else
-    echo -e ">> OK, keep going.\n"
+    echo -e "\n>> OK, keep going."
 fi
 
-echo -e ">> Installing repository: epel-release"
+echo -e "\n>> Installing repository: epel-release"
 #sleep 3
 yum install -y epel-release
 
