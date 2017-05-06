@@ -17,16 +17,16 @@ sed -i "s/RELEASE_START/$DHCPReleaseStart/g" dhcp.template
 sed -i "s/RELEASE_END/$DHCPReleaseEnd/g" dhcp.template
 
 echo -e ">> \nChanging some setting within the dhcp.template"
-mv /etc/cobbler/dhcp.template /etc/cobbler/dhcp.template.bk
+mv -f /etc/cobbler/dhcp.template /etc/cobbler/dhcp.template.bk
 
 echo -e "\n>>Replacing the /etc/cobbler/dhcp.tempate with the dhcp.template"
 cp  ./dhcp.template /etc/cobbler/dhcp.template
+
+echo -e "\nRestarting Cobbler service..."
+systemctl restart cobblerd.service
 
 echo -e "\nSyncing Cobbler settings."
 cobbler sync 
 
 echo -e "\nRestarting dhcp service..."
 systemctl restart dhcpd.service
-
-echo -e "\nRestarting Cobbler service..."
-systemctl restart cobblerd.service
