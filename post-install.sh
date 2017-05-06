@@ -16,6 +16,10 @@ sed -i "s/DNS/$DHCP_DNS/g" dhcp.template
 sed -i "s/RELEASE_START/$DHCPReleaseStart/g" dhcp.template
 sed -i "s/RELEASE_END/$DHCPReleaseEnd/g" dhcp.template
 
+cp /etc/cobbler/dhcp.template /etc/cobbler/dhcp.template.bk
+
+mv -f ./dhcp.template /etc/cobbler/dhcp.template
+
 exit
 
 echo -e "\nSyncing Cobbler settings."
