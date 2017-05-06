@@ -9,12 +9,12 @@ DHCPReleaseStart='192.168.0.200'
 DHCPReleaseEnd='192.168.0.220'
 
 
-sed -i "s/192.168.1.0/$DHCPSubnet/g" dhcp.template
-sed -i "s/255.255.255.0/$DHCPNetmask/g" dhcp.template
-sed -i "s/192.168.1.5/$DHCPGateway/g" dhcp.template
-sed -i "s/192.168.1.1/$DHCP_DNS/g" dhcp.template
-sed -i "s/192.168.1.100/$DHCPReleaseStart/g" dhcp.template
-sed -i "s/192.168.1.254/$DHCPReleaseEnd/g" dhcp.template
+sed -i "s/RELEASE_SUBNET/$DHCPSubnet/g" dhcp.template
+sed -i "s/SUBNET_MASK/$DHCPNetmask/g" dhcp.template
+sed -i "s/GATEWAY/$DHCPGateway/g" dhcp.template
+sed -i "s/DNS/$DHCP_DNS/g" dhcp.template
+sed -i "s/RELEASE_START/$DHCPReleaseStart/g" dhcp.template
+sed -i "s/RELEASE_END/$DHCPReleaseEnd/g" dhcp.template
 
 exit
 
