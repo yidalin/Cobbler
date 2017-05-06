@@ -91,6 +91,9 @@ NewCobblerPassword=$(openssl passwd -1 -salt 'salt' 'cobbler')
 echo -e "\n>> Replacing the default root password"
 sed -i "s|$OldCobblerPassword|$NewCobblerPassword|g" /etc/cobbler/settings
 
+echo -e "\n>> Get the loaders again"
+cobbler get-loaders
+
 echo -e "\n>> Restarting Cobbler service..."
 systemctl restart cobblerd.service
 sleep 1
