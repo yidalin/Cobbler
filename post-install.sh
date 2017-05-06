@@ -16,8 +16,10 @@ sed -i "s/DNS/$DHCP_DNS/g" dhcp.template
 sed -i "s/RELEASE_START/$DHCPReleaseStart/g" dhcp.template
 sed -i "s/RELEASE_END/$DHCPReleaseEnd/g" dhcp.template
 
+echo -e "\nChanging some setting within the dhcp.template"
 cp /etc/cobbler/dhcp.template /etc/cobbler/dhcp.template.bk
 
+echo -e "\nReplacing the /etc/cobbler/dhcp.tempate with the dhcp.template"
 mv -f ./dhcp.template /etc/cobbler/dhcp.template
 
 exit
