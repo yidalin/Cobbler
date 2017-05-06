@@ -19,7 +19,7 @@ sed -i "s/RELEASE_END/$DHCPReleaseEnd/g" dhcp.template
 echo -e ">> \nChanging some setting within the dhcp.template"
 mv /etc/cobbler/dhcp.template /etc/cobbler/dhcp.template.bk
 
-echo -e "\n>> Replacing the /etc/cobbler/dhcp.tempate with the dhcp.template"
+echo -e "\n>>Replacing the /etc/cobbler/dhcp.tempate with the dhcp.template"
 cp  ./dhcp.template /etc/cobbler/dhcp.template
 
 echo -e "\nSyncing Cobbler settings."
