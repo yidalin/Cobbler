@@ -12,9 +12,6 @@ DistroVer=$(echo $RedHatRelease | awk -F" " '{ print $4 }' | awk -F"." '{ print 
 CobblerServer=$(hostname -I)
 TFTPServer=$(hostname -I)
 
-OldCobblerPassword=$(grep default_password_crypted /etc/cobbler/settings | awk '{ print$2 }')
-NewCobblerPassword=$(openssl passwd -1 -salt 'salt' 'cobbler')
-
 # Checking the distribution, it should be CentOS
 if [ "$Distro" == 'CentOS' ]; then
     echo -e "\n>> Good, the OS is CentOS!"
@@ -89,12 +86,17 @@ echo -e "\n>> Changing /etc/debmirror.conf (Only needed when install Debian OS)"
 sed -i 's/@dists="sid";/#@dists="sid";/g' /etc/debmirror.conf
 sed -i 's/@arches="i386";/#@arches="i386";/g' /etc/debmirror.conf
 
+OldCobblerPassword=$(grep default_password_crypted /etc/cobbler/settings | awk '{ print$2 }')
+NewCobblerPassword=$(openssl passwd -1 -salt 'salt' 'cobbler')
 echo -e "\n>> Replacing the default root password"
 sed -i "s|$OldCobblerPassword|$NewCobblerPassword|g" /etc/cobbler/settings
 
 echo -e "\n>> Restarting Cobbler service..."
 systemctl restart cobblerd.service
 sleep 1
+
+echo -e "\n>> Syncing Cobbler settings"
+cobbler sync
 
 echo -e "\n>> Check the prerequisites..."
 CobblerCheck=$(cobbler check | tee /dev/tty)
