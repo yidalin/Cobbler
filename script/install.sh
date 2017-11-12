@@ -1,60 +1,70 @@
 # Install cobbler in CentOS 7.3
 
-RedHatRelease=$(cat /etc/redhat-release)
-#echo $RedHatRelease
+logfile='./history.log'
 
-Distro=$(echo $RedHatRelease | awk -F" " '{ print $1 }')
-#echo $Distro
+os_info=$(cat /etc/redhat-release)
+distribution=$(echo ${os_info} | awk -F" " '{ print $1 }')
+distribution_version=$(echo $os_info | awk -F" " '{ print $4 }' | awk -F"." '{ print $1}')
 
-DistroVer=$(echo $RedHatRelease | awk -F" " '{ print $4 }' | awk -F"." '{ print $1}')
-#echo $DistroVer
+cobbler_server='172.16.0.103'
+tftp_server='172.16.0.103'
 
-CobblerServer=$(hostname -I)
-TFTPServer=$(hostname -I)
+echo -e "\n>> OS Information <<"
+echo -e "OS: ${os_info}"
+echo -e "Distribution: $distribution"
+echo -e "Distribution Version: $distribution_version"
+
+cobbler_server='172.16.0.103'
+tftp_server='172.16.0.103'
+
+echo -e "\n>> Bacis Setting <<"
+echo -e "Cobbler Server: $cobbler_server"
+echo -e "TFTP Server: $tftp_server"
 
 # Checking the distribution, it should be CentOS
-if [ "$Distro" == 'CentOS' ]; then
-    echo -e "\n>> Good, the OS is CentOS!"
+if [ "$distribution" == 'CentOS' ]; then
+    echo ">> Good, the OS is CentOS."
 else
-    echo -e "\n>> The OS is not CentOS, bye bye."
+    echo ">> The OS is not CentOS, bye bye."
     exit
 fi
 
 # Checking the distribution version, it should be 7
-if [ "$DistroVer" == '7' ]; then
-    echo -e "\n>> Good, the distribution version is 7."
+if [ "$distribution_version" == '7' ]; then
+    echo ">> Good, the distribution version is 7." 
 else
-    echo -e "\n>> The distribution version is not 7, bye bye."
+    echo ">> The distribution version is not 7, bye bye."
     exit
 fi
 
+echo -e ""
+
 # Checking the SELinux setting
-if $(grep -q "SELINUX=enforcing" /etc/selinux/config); then
-    sed -in 's/SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
-    echo -e "\n>> SELinux is enabled, and now switch to disabled, the OS will reboot in 30 second."
-    sleep 10
-    sudo reboot
+if [ "$(getenforce)" = 'Enforcing' ]; then
+    sed -in 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
+    setenforce 0
+    echo ">> SELinux is in enforcing mode, now switch to permissive mode." 
 else
-    echo -e "\n>> SELinux is already disabled."
+    echo ">> SELinux is already in permissive mode." 
 fi
 
 # Checking the network can reach to internet
 
 ping -c 2 8.8.8.8 > /dev/null
 
+echo -e "" 
+
 if [ $? != '0' ]; then
-    echo -e "\n>> Please make sure your network is workable."
+    echo ">> Please make sure your network is workable." 
     exit
 else
-    echo -e "\n>> OK, keep going."
+    echo ">> OK, keep going." 
 fi
 
 echo -e "\n>> Installing repository: epel-release"
-#sleep 3
 yum install -y epel-release
 
 echo -e "\n>> Installing Cobbler package and its dependency packages"
-#sleep 3
 yum install -y cobbler cobbler-web dhcp xinetd tftp-server python-ctypes pykickstart fence-agents
 
 echo -e "\n>> Enable and start Cobbler service and Apache service"
@@ -67,8 +77,8 @@ echo -e "\n>> Run command: cobbler get-loaders"
 cobbler get-loaders
 
 echo -e "\n>> Replacing some parameter of cobbler setting."
-sed -i "s/server: 127.0.0.1/server: $CobblerServer/g" /etc/cobbler/settings
-sed -i "s/next_server: 127.0.0.1/next_server: $TFTPServer/g" /etc/cobbler/settings
+sed -i "s/server: 127.0.0.1/server: $cobbler_server/g" /etc/cobbler/settings
+sed -i "s/next_server: 127.0.0.1/next_server: $tftp_server/g" /etc/cobbler/settings
 
 echo -e "\n>> Turn on the TFTP service."
 grep -l 'disable' /etc/xinetd.d/tftp | xargs -i sed -i 's/yes/no/g' {}
@@ -96,7 +106,6 @@ cobbler get-loaders
 
 echo -e "\n>> Restarting Cobbler service..."
 systemctl restart cobblerd.service
-sleep 1
 
 echo -e "\n>> Syncing Cobbler settings"
 cobbler sync
