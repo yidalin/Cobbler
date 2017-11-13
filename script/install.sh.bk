@@ -1,30 +1,76 @@
 # Install cobbler in CentOS 7.3
 
+logfile='./history.log'
+
+os_info=$(cat /etc/redhat-release)
+distribution=$(echo ${os_info} | awk -F" " '{ print $1 }')
+distribution_version=$(echo $os_info | awk -F" " '{ print $4 }' | awk -F"." '{ print $1}')
+
 cobbler_server='172.16.0.103'
 tftp_server='172.16.0.103'
-selinux_mode='permissive'
+
+echo -e "\n>> OS Information <<"
+echo -e "OS: ${os_info}"
+echo -e "Distribution: $distribution"
+echo -e "Distribution Version: $distribution_version"
+
+cobbler_server='172.16.0.103'
+tftp_server='172.16.0.103'
+
+echo -e "\n>> Bacis Setting <<"
+echo -e "Cobbler Server: $cobbler_server"
+echo -e "TFTP Server: $tftp_server"
+
+# Checking the distribution, it should be CentOS
+if [ "$distribution" == 'CentOS' ]; then
+    echo ">> Good, the OS is CentOS."
+else
+    echo ">> The OS is not CentOS, bye bye."
+    exit
+fi
+
+# Checking the distribution version, it should be 7
+if [ "$distribution_version" == '7' ]; then
+    echo ">> Good, the distribution version is 7." 
+else
+    echo ">> The distribution version is not 7, bye bye."
+    exit
+fi
+
+echo -e ""
 
 # Checking the SELinux setting
 if [ "$(getenforce)" = 'Enforcing' ]; then
-    sed -in "s/SELINUX=enforcing/SELINUX=${selinux_mode}/" /etc/selinux/config
+    sed -in 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
     setenforce 0
     echo ">> SELinux is in enforcing mode, now switch to permissive mode." 
 else
-    echo ">> SELinux mode: $(getenforce)" 
+    echo ">> SELinux is already in permissive mode." 
 fi
 
-exit
+# Checking the network can reach to internet
+
+ping -c 2 8.8.8.8 > /dev/null
+
+echo -e "" 
+
+if [ $? != '0' ]; then
+    echo ">> Please make sure your network is workable." 
+    exit
+else
+    echo ">> OK, keep going." 
+fi
 
 echo -e "\n>> Installing repository: epel-release"
 yum install -y epel-release
 
 echo -e "\n>> Installing Cobbler package and its dependency packages"
-yum install -y cobbler cobbler-web httpd rsync tftp-server xinetd dhcp python-ctypes debmirror pykickstart cman fence-agents dnsmasq
+yum install -y cobbler cobbler-web dhcp xinetd tftp-server python-ctypes pykickstart fence-agents
 
 echo -e "\n>> Enable and start Cobbler service and Apache service"
 systemctl enable cobblerd.service
-systemctl start cobblerd.service
 systemctl enable httpd.service
+systemctl start cobblerd.service
 systemctl start httpd.service
 
 echo -e "\n>> Run command: cobbler get-loaders"
