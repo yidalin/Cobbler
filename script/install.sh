@@ -17,11 +17,8 @@ fi
 
 # Installing the EPEL repo
 echo -e "\n>> Installing repository: epel-release"
-#wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -O /tmp/epel-release-latest-7.noarch.rpm
-#rpm -ivh /tmp/epel-release-latest-7.noarch.rpm
-yum install -y epel-release-latest-7
-#yum install -y epel-release
-exit
+#https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install -y epel-release
 
 # Installing the Cobbler and its dependency packages
 echo -e "\n>> Installing Cobbler package and its dependency packages"
@@ -35,6 +32,7 @@ systemctl start cobblerd.service
 systemctl enable httpd.service
 systemctl start httpd.service
 
+exit
 # Cobbler get loaders
 echo -e "\n>> Run command: cobbler get-loaders"
 cobbler get-loaders
