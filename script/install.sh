@@ -16,8 +16,10 @@ systemctl status firewalld.service | head -n 3 | tail -n 2
 echo -e "\n>> Checking the SELinux setting"
 if [ "$(getenforce)" = 'Enforcing' ]; then
     sed -in "s/SELINUX=enforcing/SELINUX=${selinux_mode}/" /etc/selinux/config
-    setenforce 0
-    echo " >> SELinux is in enforcing mode, now switch to permissive mode." 
+    echo " >> SELinux is in enforcing mode, now switch to permissive mode."
+    echo " >> Now system will reboot..."
+    sleep 3
+    reboot
 else
     echo " >> SELinux mode: $(getenforce)" 
 fi
@@ -32,6 +34,12 @@ yum install -y epel-release
 # Installing the Cobbler and its dependency packages
 echo -e "\n>> Installing Cobbler package and its dependency packages"
 yum install -y cobbler cobbler-web httpd rsync tftp-server xinetd dhcp python-ctypes debmirror pykickstart cman fence-agents dnsmasq
+
+# Check Cobbler environment
+echo -e "\n>> Checking the Cobbler environment"
+cobbler check
+
+exit
 
 # Replacing some variables or parameters of the Cobbler setting file
 echo -e "\n>> Replacing some parameter of cobbler setting."
