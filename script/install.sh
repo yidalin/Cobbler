@@ -40,6 +40,7 @@ yum install -y cobbler cobbler-web httpd tftp-server rsync dhcp debmirror pykick
 echo -e "\n>> Enable services: httpd, cobblerd"
 systemctl enable httpd.service
 systemctl enable cobblerd.service
+
 echo -e "\n>> Restart services: httpd, cobblerd"
 systemctl start httpd.service
 systemctl start cobblerd.service
@@ -47,6 +48,8 @@ systemctl start cobblerd.service
 # Check Cobbler environment
 echo -e "\n>> Checking the Cobbler environment"
 cobbler check
+
+sleep 3
 
 # Replacing some variables or parameters of the Cobbler setting file
 echo -e "\n>> Replacing some parameter of cobbler setting."
@@ -77,13 +80,11 @@ cobbler sync
 
 cobbler check
 
-exit
-
 echo -e "\n>> Get boot-loaders"
 cobbler get-loaders
 
 systemctl enable rsyncd.service
-systemctl restart rsyncd.service
+systemctl start rsyncd.service
 
 echo -e "\n>> Changing /etc/debmirror.conf (Only needed when install Debian OS)"
 sed -i 's/@dists="sid";/#@dists="sid";/g' /etc/debmirror.conf
@@ -95,10 +96,9 @@ echo -e "\n>> Replacing the default root password"
 sed -i "s|$root_password_old|$root_password_new|g" /etc/cobbler/settings
 
 systemctl restart cobblerd.service
+
 cobbler sync
 
-# Enable and start rsync and xineted
-sleep 1
 cobbler check
 
 exit
