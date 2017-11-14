@@ -17,8 +17,9 @@ fi
 
 # Installing the EPEL repo
 echo -e "\n>> Installing repository: epel-release"
-wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm /tmp
-rpm -ivh /tmp/epel-release-latest-7.noarch.rpm
+#wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -O /tmp/epel-release-latest-7.noarch.rpm
+#rpm -ivh /tmp/epel-release-latest-7.noarch.rpm
+yum install -y epel-release-latest-7
 #yum install -y epel-release
 exit
 
