@@ -33,7 +33,8 @@ yum install -y epel-release
 
 # Installing the Cobbler and its dependency packages
 echo -e "\n>> Installing Cobbler package and its dependency packages"
-yum install -y cobbler cobbler-web httpd rsync tftp-server xinetd dhcp python-ctypes debmirror pykickstart cman fence-agents dnsmasq
+yum install -y cobbler cobbler-web httpd tftp-server rsync dhcp debmirror pykickstart
+#yum install -y cobbler cobbler-web httpd rsync tftp-server xinetd dhcp python-ctypes debmirror pykickstart cman fence-agents dnsmasq
 
 echo -e "\n>> Enable services: httpd, cobblerd"
 systemctl enable httpd.service
@@ -76,9 +77,6 @@ cobbler get-loaders
 
 systemctl enable rsyncd.service
 systemctl restart rsyncd.service
-
-echo -e "\n>> Installing debmirror for install Debian OS"
-yum install -y debmirror
 
 echo -e "\n>> Changing /etc/debmirror.conf (Only needed when install Debian OS)"
 sed -i 's/@dists="sid";/#@dists="sid";/g' /etc/debmirror.conf
