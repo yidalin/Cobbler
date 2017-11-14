@@ -1,8 +1,8 @@
 ## Install cobbler in CentOS 7.3
 
 # Pre-defined variables
-cobbler_server='172.16.0.103'
-tftp_server='172.16.0.103'
+cobbler_server='192.168.0.103'
+tftp_server='192.168.0.103'
 selinux_mode='disabled'
 new_root_password='password'
 
@@ -19,7 +19,8 @@ if [ "$(getenforce)" = 'Enforcing' ]; then
     echo " >> SELinux is in enforcing mode, now switch to permissive mode."
     echo " >> Now system will reboot..."
     sleep 3
-    reboot
+    setenforce 0
+#    reboot
 else
     echo " >> SELinux mode: $(getenforce)" 
 fi
@@ -33,17 +34,15 @@ yum install -y epel-release
 
 # Installing the Cobbler and its dependency packages
 echo -e "\n>> Installing Cobbler package and its dependency packages"
-yum install -y cobbler cobbler-web httpd tftp-server rsync dhcp debmirror pykickstart
+yum install -y cobbler cobbler-web httpd tftp-server rsync dhcp debmirror pykickstart cman fence-agents
 #yum install -y cobbler cobbler-web httpd rsync tftp-server xinetd dhcp python-ctypes debmirror pykickstart cman fence-agents dnsmasq
 
 echo -e "\n>> Enable services: httpd, cobblerd"
 systemctl enable httpd.service
 systemctl enable cobblerd.service
 echo -e "\n>> Restart services: httpd, cobblerd"
-systemctl restart httpd.service
-systemctl restart cobblerd.service
-
-sleep 1
+systemctl start httpd.service
+systemctl start cobblerd.service
 
 # Check Cobbler environment
 echo -e "\n>> Checking the Cobbler environment"
@@ -71,6 +70,14 @@ grep -l 'disable' /etc/xinetd.d/tftp | xargs -i sed -i 's/yes/no/g' {}
 
 systemctl enable xinetd.service
 systemctl restart xinetd.service
+systemctl restart httpd.service
+systemctl restart cobblerd.service
+
+cobbler sync
+
+cobbler check
+
+exit
 
 echo -e "\n>> Get boot-loaders"
 cobbler get-loaders
