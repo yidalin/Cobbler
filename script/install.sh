@@ -20,7 +20,7 @@ if [ "$(getenforce)" = 'Enforcing' ]; then
     echo " >> Now system will reboot..."
     sleep 3
     setenforce 0
-#    reboot
+    reboot
 else
     echo " >> SELinux mode: $(getenforce)" 
 fi
@@ -103,14 +103,14 @@ cobbler check
 
 exit
 
-echo -e "\n>> Get the loaders again"
-cobbler get-loaders
+#echo -e "\n>> Get the loaders again"
+#cobbler get-loaders
 
-echo -e "\n>> Restarting Cobbler service..."
-systemctl restart cobblerd.service
+#echo -e "\n>> Restarting Cobbler service..."
+#systemctl restart cobblerd.service
 
-echo -e "\n>> Syncing Cobbler settings"
-cobbler sync
+#echo -e "\n>> Syncing Cobbler settings"
+#cobbler sync
 
 cobbler_check=$(cobbler check | tee /dev/tty)
 echo -e "\n>> Check the prerequisites..."
