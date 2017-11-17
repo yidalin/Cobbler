@@ -1,17 +1,17 @@
 ## Install cobbler in CentOS 7.3
 
 # Pre-defined variables
-cobbler_server='192.168.0.103'
-tftp_server='192.168.0.103'
+cobbler_server='172.16.0.103'
+tftp_server='172.16.0.103'
 selinux_mode='disabled'
 new_root_password='password'
 
-DHCP_NETWORK='192.168.0.0'
+DHCP_NETWORK='172.16.0.0'
 DHCP_SUBNETMASK='255.255.255.0'
 DHCP_GATEWAY='192.168.0.1'
 DHCP_DNS='192.168.0.1'
-DHCP_RELEASE_START='192.168.0.220'
-DHCP_RELEASE_END='192.168.0.210'
+DHCP_RELEASE_START='172.16.0.201'
+DHCP_RELEASE_END='172.16.0.210'
 DHCP_LISTEN_INTERFASE="eth0"
 
 # Stop firewalld during installation
@@ -79,8 +79,8 @@ sed -i "s/next_server: 127.0.0.1/next_server: $tftp_server/g" /etc/cobbler/setti
 echo -e "\n>> Turn on the TFTP service."
 grep -l 'disable' /etc/xinetd.d/tftp | xargs -i sed -i 's/yes/no/g' {}
 
-systemctl enable xinetd.service
-systemctl restart xinetd.service
+systemctl enable tftp.socket
+systemctl restart tftp.socket
 systemctl restart httpd.service
 systemctl restart cobblerd.service
 
@@ -109,8 +109,6 @@ cobbler sync
 
 cobbler check
 
-exit
-
 #echo -e "\n>> Get the loaders again"
 #cobbler get-loaders
 
@@ -124,7 +122,6 @@ cobbler_check=$(cobbler check | tee /dev/tty)
 echo -e "\n>> Check the prerequisites..."
 if [ "$cobbler_check" != 'No configuration problems found.  All systems go.' ]; then
     echo -e "\n>> Please check the prerequisites of Cobbler"
-    exit
 fi
 
 sleep 5
@@ -145,6 +142,9 @@ sed -i "s/DHCP_DNS/$DHCP_DNS/g" /etc/cobbler/dhcp.template
 sed -i "s/DHCP_RELEASE_START/$DHCP_RELEASE_START/g" /etc/cobbler/dhcp.template
 sed -i "s/DHCP_RELEASE_END/$DHCP_RELEASE_END/g" /etc/cobbler/dhcp.template
 
+echo -e "\n>> Change listen interface"
+echo "DHCPDARGS=\"$DHCPListenInterface\";" >> /etc/sysconfig/dhcpd
+
 echo -e "\n>> Restarting Cobbler service..."
 systemctl restart dhcpd.service
 systemctl restart cobblerd.service
@@ -158,5 +158,3 @@ if [ "$cobbler_check" != 'No configuration problems found.  All systems go.' ]; 
     echo -e "\n>> Please check the prerequisites of Cobbler"
     exit
 fi
-#echo -e "\n>> Change listen interface"
-#echo "DHCPDARGS=\"$DHCPListenInterface\";" >> /etc/sysconfig/dhcpd
