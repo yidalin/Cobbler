@@ -35,6 +35,15 @@ yum install -y epel-release
 echo -e "\n>> Installing Cobbler package and its dependency packages"
 yum install -y cobbler cobbler-web httpd rsync tftp-server xinetd dhcp python-ctypes debmirror pykickstart cman fence-agents dnsmasq
 
+echo -e "\n>> Enable services: httpd, cobblerd"
+systemctl enable httpd.service
+systemctl enable cobblerd.service
+echo -e "\n>> Restart services: httpd, cobblerd"
+systemctl restart httpd.service
+systemctl restart cobblerd.service
+
+sleep 1
+
 # Check Cobbler environment
 echo -e "\n>> Checking the Cobbler environment"
 cobbler check
@@ -50,12 +59,12 @@ echo -e ">> Set the next_server (PXE) IP to $tftp_server"
 sed -i "s/next_server: 127.0.0.1/next_server: $tftp_server/g" /etc/cobbler/settings
 
 # Make Cobbler manage rsync service
-echo -e "\n>> Make Cobbler can manage rsync service."
-sed -i 's/manage_rsync: 0/manage_rsync: 1/g' /etc/cobbler/settings
+#echo -e "\n>> Make Cobbler can manage rsync service."
+#sed -i 's/manage_rsync: 0/manage_rsync: 1/g' /etc/cobbler/settings
 
 # Make Cobbler manage DHCP service
-echo -e "\n>> Make Cobbler can manage DHCP service."
-sed -i 's/manage_dhcp: 0/manage_dhcp: 1/g' /etc/cobbler/settings
+#echo -e "\n>> Make Cobbler can manage DHCP service."
+#sed -i 's/manage_dhcp: 0/manage_dhcp: 1/g' /etc/cobbler/settings
 
 # Turn on the TFTP service (xinted)
 echo -e "\n>> Turn on the TFTP service."
@@ -70,20 +79,26 @@ sed -i 's/@arches="i386";/#@arches="i386";/g' /etc/debmirror.conf
 
 root_password_old=$(grep default_password_crypted /etc/cobbler/settings | awk '{ print$2 }')
 root_password_new=$(openssl passwd -1 -salt 'salt' $new_root_password)
+
+echo $root_password_old
+echo $root_password_new
+exit
 echo -e "\n>> Replacing the default root password"
 sed -i "s|$root_password_old|$root_password_new|g" /etc/cobbler/settings
+
+cobbler sync
 
 # Enable and start rsync and xineted
 echo -e "\n>> Enable rsync and xinetd, also start them."
 systemctl enable rsyncd.service
 systemctl enable xinetd.service
-systemctl enable httpd.service
-systemctl enable cobblerd.service
 
-systemctl start rsyncd.service
-systemctl start xinetd.service
-systemctl start httpd.service
-systemctl start cobblerd.service
+systemctl restart rsyncd.service
+systemctl restart xinetd.service
+systemctl restart httpd.service
+systemctl restart cobblerd.service
+sleep 1
+cobbler check
 exit
 echo -e "\n>> Get the loaders again"
 cobbler get-loaders
