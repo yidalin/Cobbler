@@ -26,7 +26,7 @@ systemctl status firewalld.service | head -n 3 | tail -n 2
 echo -e "\n>> Checking the SELinux setting"
 if [ "$(getenforce)" = 'Enforcing' ]; then
     sed -in "s/SELINUX=enforcing/SELINUX=${selinux_mode}/" /etc/selinux/config
-    echo " >> SELinux is in $(getenforce) mode, now switch to $(selinux_mode) mode."
+    echo " >> SELinux is in $(getenforce) mode, now switch to ${selinux_mode} mode."
 else
     echo " >> SELinux mode: $(getenforce)" 
 fi
