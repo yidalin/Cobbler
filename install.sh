@@ -3,7 +3,7 @@
 # Pre-defined variables
 cobbler_server='172.16.0.103'
 tftp_server='172.16.0.103'
-selinux_mode='disabled'
+selinux_mode='permissive'
 new_root_password='password'
 
 DHCP_NETWORK='172.16.0.0'
@@ -17,18 +17,16 @@ DHCP_LISTEN_INTERFASE="eth0"
 # Stop firewalld during installation
 echo -e "\n>> Stopping firewalld"
 systemctl stop firewalld.service
-echo -e " >> The firewalld status:"
+
+echo -e "\n>> The firewalld status:"
 systemctl status firewalld.service | head -n 3 | tail -n 2
+
 
 # Checking the SELinux setting
 echo -e "\n>> Checking the SELinux setting"
 if [ "$(getenforce)" = 'Enforcing' ]; then
     sed -in "s/SELINUX=enforcing/SELINUX=${selinux_mode}/" /etc/selinux/config
-    echo " >> SELinux is in enforcing mode, now switch to permissive mode."
-    echo " >> Now system will reboot..."
-    sleep 3
-    setenforce 0
-    reboot
+    echo " >> SELinux is in $(getenforce) mode, now switch to $(selinux_mode) mode."
 else
     echo " >> SELinux mode: $(getenforce)" 
 fi
@@ -49,7 +47,7 @@ echo -e "\n>> Enable services: httpd, cobblerd"
 systemctl enable httpd.service
 systemctl enable cobblerd.service
 
-echo -e "\n>> Restart services: httpd, cobblerd"
+echo -e "\n>> Start services: httpd, cobblerd"
 systemctl start httpd.service
 systemctl start cobblerd.service
 
@@ -57,40 +55,44 @@ systemctl start cobblerd.service
 echo -e "\n>> Checking the Cobbler environment"
 cobbler check
 
-sleep 3
-
 # Replacing some variables or parameters of the Cobbler setting file
 echo -e "\n>> Replacing some parameter of cobbler setting."
-echo -e ">> Set the listening IP to $cobbler_server"
+echo -e " >> Switching the listening IP to $cobbler_server"
 sed -i "s/server: 127.0.0.1/server: $cobbler_server/g" /etc/cobbler/settings
+grep "$cobbler_server" /etc/cobbler/settings
 
-echo -e ">> Set the next_server (PXE) IP to $tftp_server"
+echo -e " >> Switching the next_server (PXE) IP to $tftp_server"
 sed -i "s/next_server: 127.0.0.1/next_server: $tftp_server/g" /etc/cobbler/settings
-
-# Make Cobbler manage rsync service
-#echo -e "\n>> Make Cobbler can manage rsync service."
-#sed -i 's/manage_rsync: 0/manage_rsync: 1/g' /etc/cobbler/settings
-
-# Make Cobbler manage DHCP service
-#echo -e "\n>> Make Cobbler can manage DHCP service."
-#sed -i 's/manage_dhcp: 0/manage_dhcp: 1/g' /etc/cobbler/settings
+grep "$tftp_server" /etc/cobbler/settings
 
 # Turn on the TFTP service (xinted)
 echo -e "\n>> Turn on the TFTP service."
 grep -l 'disable' /etc/xinetd.d/tftp | xargs -i sed -i 's/yes/no/g' {}
 
+# Enable and start tftp.socket
+echo -e "\n>> Enable and start the tftp.socket"
 systemctl enable tftp.socket
-systemctl restart tftp.socket
+systemctl start tftp.socket
+
+# Restart httpd and cobblerd
+echo -e "\n>> Restart httpd and cobblerd"
 systemctl restart httpd.service
 systemctl restart cobblerd.service
 
+# Sync cobbler setting
+echo -e "\nSynchronizing the cobbler setting"
 cobbler sync
 
+# Check Cobbler service
+echo -e "\nChecking the Cobbler service"
 cobbler check
 
-echo -e "\n>> Get boot-loaders"
+# Download boot loaders
+echo -e "\n>> Downloading boot loaders"
 cobbler get-loaders
 
+# Enable and restart rsync service
+echo -e "\n>> Enable and restart rsync service"
 systemctl enable rsyncd.service
 systemctl start rsyncd.service
 
@@ -109,22 +111,13 @@ cobbler sync
 
 cobbler check
 
-#echo -e "\n>> Get the loaders again"
-#cobbler get-loaders
-
-#echo -e "\n>> Restarting Cobbler service..."
-#systemctl restart cobblerd.service
-
-#echo -e "\n>> Syncing Cobbler settings"
-#cobbler sync
-
 cobbler_check=$(cobbler check | tee /dev/tty)
 echo -e "\n>> Check the prerequisites..."
 if [ "$cobbler_check" != 'No configuration problems found.  All systems go.' ]; then
     echo -e "\n>> Please check the prerequisites of Cobbler"
+elif
+    exit
 fi
-
-sleep 5
 
 echo -e "\n>> Use Cobbler to manage dhcp config."
 sed -i 's/manage_dhcp: 0/manage_dhcp: 1/g' /etc/cobbler/settings
@@ -135,6 +128,7 @@ mv -f /etc/cobbler/dhcp.template /etc/cobbler/dhcp.template.bk
 echo -e "\n>> Replacing the /etc/cobbler/dhcp.tempate with the dhcp.template"
 cp -av ./dhcp.template /etc/cobbler/dhcp.template
 
+echo -e "\n>> Replacing some DHCP setting"
 sed -i "s/DHCP_NETWORK/$DHCP_NETWORK/g" /etc/cobbler/dhcp.template
 sed -i "s/DHCP_SUBNETMASK/$DHCP_SUBNETMASK/g" /etc/cobbler/dhcp.template
 sed -i "s/DHCP_GATEWAY/$DHCP_GATEWAY/g" /etc/cobbler/dhcp.template
@@ -142,13 +136,13 @@ sed -i "s/DHCP_DNS/$DHCP_DNS/g" /etc/cobbler/dhcp.template
 sed -i "s/DHCP_RELEASE_START/$DHCP_RELEASE_START/g" /etc/cobbler/dhcp.template
 sed -i "s/DHCP_RELEASE_END/$DHCP_RELEASE_END/g" /etc/cobbler/dhcp.template
 
-echo -e "\n>> Change listen interface"
-echo "DHCPDARGS=\"$DHCPListenInterface\";" >> /etc/sysconfig/dhcpd
+#echo -e "\n>> Change listen interface"
+#echo "DHCPDARGS=\"$DHCPListenInterface\";" >> /etc/sysconfig/dhcpd
 
-echo -e "\n>> Restarting Cobbler service..."
+echo -e "\n>> Restart DHCP service"
 systemctl restart dhcpd.service
-systemctl enable tftp.socket
-systemctl start tftp.socket
+
+echo -e "\n>> Restart Cobblerd"
 systemctl restart cobblerd.service
 
 echo -e "\n>> Syncing Cobbler settings."
