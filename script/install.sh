@@ -3,19 +3,23 @@
 # Pre-defined variables
 cobbler_server='172.16.0.103'
 tftp_server='172.16.0.103'
-selinux_mode='permissive'
-root_password_old=$(grep default_password_crypted /etc/cobbler/settings | awk '{ print$2 }')
-root_password_new=$(openssl passwd -1 -salt 'salt' 'cobbler')
-cobbler_check=$(cobbler check | tee /dev/tty)
+selinux_mode='disabled'
+new_root_password='password'
+
+# Stop firewalld during installation
+echo -e "\n>> Stopping firewalld"
+systemctl stop firewalld.service
+echo -e " >> The firewalld status:"
+systemctl status firewalld.service | head -n 3 | tail -n 2
 
 # Checking the SELinux setting
-echo -e ">> Checking the SELinux setting"
+echo -e "\n>> Checking the SELinux setting"
 if [ "$(getenforce)" = 'Enforcing' ]; then
     sed -in "s/SELINUX=enforcing/SELINUX=${selinux_mode}/" /etc/selinux/config
     setenforce 0
-    echo ">> SELinux is in enforcing mode, now switch to permissive mode." 
+    echo " >> SELinux is in enforcing mode, now switch to permissive mode." 
 else
-    echo ">> SELinux mode: $(getenforce)" 
+    echo " >> SELinux mode: $(getenforce)" 
 fi
 
 # setsebool -P httpd_can_network_connect true
@@ -56,6 +60,8 @@ echo -e "\n>> Changing /etc/debmirror.conf (Only needed when install Debian OS)"
 sed -i 's/@dists="sid";/#@dists="sid";/g' /etc/debmirror.conf
 sed -i 's/@arches="i386";/#@arches="i386";/g' /etc/debmirror.conf
 
+root_password_old=$(grep default_password_crypted /etc/cobbler/settings | awk '{ print$2 }')
+root_password_new=$(openssl passwd -1 -salt 'salt' $new_root_password)
 echo -e "\n>> Replacing the default root password"
 sed -i "s|$root_password_old|$root_password_new|g" /etc/cobbler/settings
 
@@ -70,7 +76,7 @@ systemctl start rsyncd.service
 systemctl start xinetd.service
 systemctl start httpd.service
 systemctl start cobblerd.service
-
+exit
 echo -e "\n>> Get the loaders again"
 cobbler get-loaders
 
@@ -80,6 +86,7 @@ systemctl restart cobblerd.service
 echo -e "\n>> Syncing Cobbler settings"
 cobbler sync
 
+cobbler_check=$(cobbler check | tee /dev/tty)
 echo -e "\n>> Check the prerequisites..."
 if [ "$cobbler_check" != 'No configuration problems found.  All systems go.' ]; then
     echo -e "\n>> Please check the prerequisites of Cobbler"
