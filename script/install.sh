@@ -48,8 +48,6 @@ sleep 1
 echo -e "\n>> Checking the Cobbler environment"
 cobbler check
 
-exit
-
 # Replacing some variables or parameters of the Cobbler setting file
 echo -e "\n>> Replacing some parameter of cobbler setting."
 echo -e ">> Set the listening IP to $cobbler_server"
@@ -70,6 +68,15 @@ sed -i "s/next_server: 127.0.0.1/next_server: $tftp_server/g" /etc/cobbler/setti
 echo -e "\n>> Turn on the TFTP service."
 grep -l 'disable' /etc/xinetd.d/tftp | xargs -i sed -i 's/yes/no/g' {}
 
+systemctl enable xinetd.service
+systemctl restart xinetd.service
+
+echo -e "\n>> Get boot-loaders"
+cobbler get-loaders
+
+systemctl enable rsyncd.service
+systemctl restart rsyncd.service
+
 echo -e "\n>> Installing debmirror for install Debian OS"
 yum install -y debmirror
 
@@ -79,27 +86,18 @@ sed -i 's/@arches="i386";/#@arches="i386";/g' /etc/debmirror.conf
 
 root_password_old=$(grep default_password_crypted /etc/cobbler/settings | awk '{ print$2 }')
 root_password_new=$(openssl passwd -1 -salt 'salt' $new_root_password)
-
-echo $root_password_old
-echo $root_password_new
-exit
 echo -e "\n>> Replacing the default root password"
 sed -i "s|$root_password_old|$root_password_new|g" /etc/cobbler/settings
 
+systemctl restart cobblerd.service
 cobbler sync
 
 # Enable and start rsync and xineted
-echo -e "\n>> Enable rsync and xinetd, also start them."
-systemctl enable rsyncd.service
-systemctl enable xinetd.service
-
-systemctl restart rsyncd.service
-systemctl restart xinetd.service
-systemctl restart httpd.service
-systemctl restart cobblerd.service
 sleep 1
 cobbler check
+
 exit
+
 echo -e "\n>> Get the loaders again"
 cobbler get-loaders
 
