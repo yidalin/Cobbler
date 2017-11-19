@@ -135,16 +135,17 @@ sed -i "s/DHCP_RELEASE_END/$DHCP_RELEASE_END/g" /etc/cobbler/dhcp.template
 #echo "DHCPDARGS=\"$DHCPListenInterface\";" >> /etc/sysconfig/dhcpd
 
 echo -e "\n>> Syncing Cobbler settings."
-cobbler sync 
+cobbler sync && cobbler sync
+
+sleep 2
 
 echo -e "\n>> Restart DHCP service"
 systemctl restart dhcpd.service
 
+sleep 2
+
 echo -e "\n>> Restart Cobblerd"
 systemctl restart cobblerd.service
-
-#echo -e "\n>> Syncing Cobbler settings."
-#cobbler sync 
 
 obbler_check=$(cobbler check | tee /dev/tty)
 echo -e "\n>> Check the prerequisites..."
