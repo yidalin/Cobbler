@@ -147,6 +147,8 @@ echo "DHCPDARGS=\"$DHCPListenInterface\";" >> /etc/sysconfig/dhcpd
 
 echo -e "\n>> Restarting Cobbler service..."
 systemctl restart dhcpd.service
+systemctl enable tftp.socket
+systemctl start tftp.socket
 systemctl restart cobblerd.service
 
 echo -e "\n>> Syncing Cobbler settings."
