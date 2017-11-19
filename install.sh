@@ -3,7 +3,7 @@
 # Pre-defined variables
 cobbler_server='172.16.0.103'
 tftp_server='172.16.0.103'
-selinux_mode='permissive'
+selinux_mode='disabled'
 new_root_password='password'
 
 DHCP_NETWORK='172.16.0.0'
@@ -27,6 +27,8 @@ echo -e "\n>> Checking the SELinux setting"
 if [ "$(getenforce)" = 'Enforcing' ]; then
     sed -in "s/SELINUX=enforcing/SELINUX=${selinux_mode}/" /etc/selinux/config
     echo " >> SELinux is in $(getenforce) mode, now switch to ${selinux_mode} mode."
+    sleep 3
+    reboot
 else
     echo " >> SELinux mode: $(getenforce)" 
 fi
@@ -35,7 +37,6 @@ fi
 
 # Installing the EPEL repo
 echo -e "\n>> Installing repository: epel-release"
-#https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 yum install -y epel-release
 
 # Installing the Cobbler and its dependency packages
@@ -59,11 +60,9 @@ cobbler check
 echo -e "\n>> Replacing some parameter of cobbler setting."
 echo -e " >> Switching the listening IP to $cobbler_server"
 sed -i "s/server: 127.0.0.1/server: $cobbler_server/g" /etc/cobbler/settings
-grep "$cobbler_server" /etc/cobbler/settings
 
 echo -e " >> Switching the next_server (PXE) IP to $tftp_server"
 sed -i "s/next_server: 127.0.0.1/next_server: $tftp_server/g" /etc/cobbler/settings
-grep "$tftp_server" /etc/cobbler/settings
 
 # Turn on the TFTP service (xinted)
 echo -e "\n>> Turn on the TFTP service."
@@ -144,8 +143,8 @@ systemctl restart dhcpd.service
 echo -e "\n>> Restart Cobblerd"
 systemctl restart cobblerd.service
 
-echo -e "\n>> Syncing Cobbler settings."
-cobbler sync 
+#echo -e "\n>> Syncing Cobbler settings."
+#cobbler sync 
 
 obbler_check=$(cobbler check | tee /dev/tty)
 echo -e "\n>> Check the prerequisites..."
