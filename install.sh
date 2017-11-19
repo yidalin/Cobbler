@@ -109,14 +109,10 @@ systemctl restart cobblerd.service
 
 cobbler sync
 
-cobbler check
-
 cobbler_check=$(cobbler check | tee /dev/tty)
 echo -e "\n>> Check the prerequisites..."
 if [ "$cobbler_check" != 'No configuration problems found.  All systems go.' ]; then
     echo -e "\n>> Please check the prerequisites of Cobbler"
-elif
-    exit
 fi
 
 echo -e "\n>> Use Cobbler to manage dhcp config."
@@ -138,6 +134,9 @@ sed -i "s/DHCP_RELEASE_END/$DHCP_RELEASE_END/g" /etc/cobbler/dhcp.template
 
 #echo -e "\n>> Change listen interface"
 #echo "DHCPDARGS=\"$DHCPListenInterface\";" >> /etc/sysconfig/dhcpd
+
+echo -e "\n>> Syncing Cobbler settings."
+cobbler sync 
 
 echo -e "\n>> Restart DHCP service"
 systemctl restart dhcpd.service
