@@ -1,8 +1,8 @@
 ## Install cobbler in CentOS 7.3
 
 # Pre-defined variables
-cobbler_server='172.16.0.103'
-tftp_server='172.16.0.103'
+cobbler_server='172.16.0.100'
+tftp_server='172.16.0.100'
 selinux_mode='disabled'
 new_root_password='password'
 
@@ -12,7 +12,7 @@ DHCP_GATEWAY='192.168.0.1'
 DHCP_DNS='192.168.0.1'
 DHCP_RELEASE_START='172.16.0.201'
 DHCP_RELEASE_END='172.16.0.210'
-DHCP_LISTEN_INTERFASE="eth0"
+DHCP_LISTEN_INTERFASE="enp0s8"
 
 # Stop firewalld during installation
 echo -e "\n>> Stopping firewalld"
